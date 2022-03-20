@@ -99,9 +99,9 @@
 		5ADD4D3127E63954003D1148 /* Model */ = {
 			isa = PBXGroup;
 			children = (
-				5A8E86F927E6518400486872 /* EmojiArtDocument.swift */,
-				5A8E86F727E650C000486872 /* EmojiArtModel.Background.swift */,
 				5A8E86F527E6505300486872 /* EmojiArtModel.swift */,
+				5A8E86F727E650C000486872 /* EmojiArtModel.Background.swift */,
+				5A8E86F927E6518400486872 /* EmojiArtDocument.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
