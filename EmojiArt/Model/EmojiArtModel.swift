@@ -5,12 +5,14 @@
 //  Created by The YooGle on 19/03/22.
 //
 
-struct EmojiArtModel {
+import Foundation
+
+struct EmojiArtModel: Codable {
     
     var background = Background.blank
     var emojis = [Emoji]()
     
-    struct Emoji: Identifiable, Hashable {
+    struct Emoji: Identifiable, Hashable, Codable {
         
         let text: String
         var x: Int // offset from the center
@@ -34,5 +36,9 @@ struct EmojiArtModel {
     mutating func addEmoji(_ text: String, at location: (x: Int, y: Int), size: Int) {
         uniqueEmojiId += 1
         emojis.append(Emoji(text: text, x: location.x, y: location.y, size: size, id: uniqueEmojiId))
+    }
+    
+    func json() throws -> Data {
+        return try JSONEncoder().encode(self)
     }
 }
