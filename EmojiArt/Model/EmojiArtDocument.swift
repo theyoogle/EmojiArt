@@ -18,6 +18,15 @@ class EmojiArtDocument: ObservableObject
         }
     }
     
+    init() {
+        if let url = Autosave.url, let autosavedEmojiArt = try? EmojiArtModel(url: url) {
+            emojiArt = autosavedEmojiArt
+            fetchBackgroundImageDataIfNecessary()
+        } else {
+            emojiArt = EmojiArtModel()
+        }
+    }
+    
     private struct Autosave {
         static let filename = "Autosaved.emojiart"
         static var url: URL? {
@@ -44,12 +53,6 @@ class EmojiArtDocument: ObservableObject
         } catch {
             print("\(thisFunction) error = \(error)")
         }
-    }
-    
-    init() {
-        emojiArt = EmojiArtModel()
-        emojiArt.addEmoji("😀", at: (-200, -100), size: 80)
-        emojiArt.addEmoji("😷", at: (50, 100), size: 40)
     }
     
     var emojis: [EmojiArtModel.Emoji] {
