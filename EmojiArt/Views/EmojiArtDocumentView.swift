@@ -11,6 +11,9 @@ struct EmojiArtDocumentView: View {
     
     @ObservedObject var document: EmojiArtDocument
     
+    let defaultEmojiFontSize: CGFloat = 40
+    let testEmojis = "😀😷🦠💉👻👀🐶🌲🌎🌞🔥🍎⚽️🚗🚓🚲🛩🚁🚀🛸🏠⌚️🎁🗝🔐❤️⛔️❌❓✅⚠️🎶➕➖🏳️"
+    
     @State private var steadyStateZoomScale: CGFloat = 1
     @GestureState private var gestureZoomScale: CGFloat = 1
     
@@ -24,8 +27,6 @@ struct EmojiArtDocumentView: View {
     private var panOffset: CGSize {
         (steadyStatePanOffset + gesturePanOffset) * zoomScale
     }
-    
-    let defaultEmojiFontSize: CGFloat = 40
     
     var body: some View {
         VStack(spacing: 0) {
@@ -63,6 +64,11 @@ struct EmojiArtDocumentView: View {
         }
     }
     
+    var palette: some View {
+        ScrollingEmojisView(emojis: testEmojis)
+            .font(.system(size: defaultEmojiFontSize))
+    }
+    
     private func drop(providers: [NSItemProvider], at location: CGPoint, in geometry: GeometryProxy) -> Bool {
         
         var found = providers.loadObjects(ofType: URL.self) { url in
@@ -92,6 +98,10 @@ struct EmojiArtDocumentView: View {
         return found
     }
     
+    private func position(for emoji: EmojiArtModel.Emoji, in geometry: GeometryProxy) -> CGPoint {
+        convertFromEmojiCoordinates((emoji.x, emoji.y), in: geometry)
+    }
+    
     private func convertToEmojiCoordinates(_ location: CGPoint, in geometry: GeometryProxy) -> (x: Int, y: Int) {
         let center = geometry.frame(in: .local).center
         let location =  CGPoint(
@@ -109,17 +119,8 @@ struct EmojiArtDocumentView: View {
         )
     }
     
-    private func position(for emoji: EmojiArtModel.Emoji, in geometry: GeometryProxy) -> CGPoint {
-        convertFromEmojiCoordinates((emoji.x, emoji.y), in: geometry)
-    }
-    
     private func fontSize(for emoji: EmojiArtModel.Emoji) -> CGFloat {
         CGFloat(emoji.size)
-    }
-    
-    var palette: some View {
-        ScrollingEmojisView(emojis: testEmojis)
-            .font(.system(size: defaultEmojiFontSize))
     }
     
     private func zoomToFit(_ image: UIImage?, in size: CGSize) {
@@ -164,8 +165,6 @@ struct EmojiArtDocumentView: View {
                 steadyStatePanOffset = steadyStatePanOffset + (finalDragGestureValue.translation / zoomScale)
             }
     }
-    
-    let testEmojis = "😀😷🦠💉👻👀🐶🌲🌎🌞🔥🍎⚽️🚗🚓🚲🛩🚁🚀🛸🏠⌚️🎁🗝🔐❤️⛔️❌❓✅⚠️🎶➕➖🏳️"
 }
 
 struct ScrollingEmojisView: View {
