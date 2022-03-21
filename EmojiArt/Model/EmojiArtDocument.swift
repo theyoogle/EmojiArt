@@ -11,7 +11,7 @@ class EmojiArtDocument: ObservableObject
 {
     @Published private(set) var emojiArt: EmojiArtModel {
         didSet {
-            autosave()
+            scheduledAutosave()
             if emojiArt.background != oldValue.background {
                 fetchBackgroundImageDataIfNecessary()
             }
@@ -32,6 +32,16 @@ class EmojiArtDocument: ObservableObject
         static var url: URL? {
             let documentDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
             return documentDirectory?.appendingPathComponent(filename)
+        }
+        static let coalescingInterval = 5.0
+    }
+    
+    private var autosavedTimer: Timer?
+    
+    private func scheduledAutosave() {
+        autosavedTimer?.invalidate()
+        autosavedTimer = Timer.scheduledTimer(withTimeInterval: Autosave.coalescingInterval, repeats: false) { _ in
+            self.autosave()     // not weak self, so document will be in memory
         }
     }
     
