@@ -11,6 +11,11 @@ struct PaletteManager: View {
     
     @EnvironmentObject var store: PaletteStore
     
+    @Environment(\.colorScheme) var colorScheme
+    @Environment(\.presentationMode) var presentationMode
+    
+    @State private var editMode: EditMode = .inactive
+    
     var body: some View {
         NavigationView {
             List {
@@ -20,13 +25,39 @@ struct PaletteManager: View {
                             Text(palette.name)
                             Text(palette.emojis)
                         }
+                        .gesture(editMode == .active ? tap : nil)
                     }
+                }
+                .onDelete { indexSet in
+                    store.palettes.remove(atOffsets: indexSet)
+                }
+                .onMove { indexSet, newOffset in
+                    store.palettes.move(fromOffsets: indexSet, toOffset: newOffset)
                 }
             }
             .navigationTitle("Manage Palettes")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem {
+                    EditButton()
+                }
+                ToolbarItem(placement: .navigationBarLeading) {
+                    if presentationMode.wrappedValue.isPresented,
+                       UIDevice.current.userInterfaceIdiom != .pad { // Do not show in iPad
+                        Button("Close") {
+                            presentationMode.wrappedValue.dismiss()
+                        }
+                    }
+                }
+            }
+            .environment(\.editMode, $editMode)
         }
     }
+    
+    var tap: some Gesture {
+        TapGesture().onEnded {  }
+    }
+    
 }
 
 

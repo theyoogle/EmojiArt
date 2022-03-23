@@ -19,6 +19,8 @@ struct EmojiArtDocumentView: View {
     @State private var steadyStatePanOffset = CGSize.zero
     @GestureState private var gesturePanOffset = CGSize.zero
     
+    @State private var alertToShow: IdentifiableAlert?
+    
     private var zoomScale: CGFloat {
         steadyStateZoomScale * gestureZoomScale
     }
@@ -60,7 +62,28 @@ struct EmojiArtDocumentView: View {
                 return drop(providers: providers, at: location, in: geometry)
             }
             .gesture(panGesture().simultaneously(with: zoomGesture()))
+            .alert(item: $alertToShow) { alertToShow in
+                alertToShow.alert()
+            }
+            .onChange(of: document.backgroundImageFetchStatus) { status in
+                switch status {
+                    case .failed(let url):
+                        showBackgroundImageFetchFailedAlert(url)
+                    default:
+                        break
+                }
+            }
         }
+    }
+    
+    private func showBackgroundImageFetchFailedAlert(_ url: URL) {
+        alertToShow = IdentifiableAlert(id: "fetch failed: " + url.absoluteString, alert: {
+            Alert(
+                title: Text("Background Image Fetch"),
+                message: Text("Couldn't load image from \(url)."),
+                dismissButton: .default(Text("OK"))
+            )
+        })
     }
     
     private func drop(providers: [NSItemProvider], at location: CGPoint, in geometry: GeometryProxy) -> Bool {
