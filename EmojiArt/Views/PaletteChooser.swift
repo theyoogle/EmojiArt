@@ -10,9 +10,11 @@ import SwiftUI
 struct PaletteChooser: View {
     
     @EnvironmentObject var store: PaletteStore
-    @State private var choosenPaletteIndex = 0
     @State private var paletteToEdit: Palette?
     @State private var managing = false
+    
+    @SceneStorage("PaletteChooser.chosenPaletteIndex")
+    private var chosenPaletteIndex = 0
     
     var emojiFontSize: CGFloat
     var emojiFont: Font {
@@ -22,7 +24,7 @@ struct PaletteChooser: View {
     var body: some View {
         HStack {
             paletteControlButton
-            body(for: store.palette(at: choosenPaletteIndex))
+            body(for: store.palette(at: chosenPaletteIndex))
         }
         .clipped()
     }
@@ -30,7 +32,7 @@ struct PaletteChooser: View {
     var paletteControlButton: some View {
         Button {
             withAnimation {
-                choosenPaletteIndex = (choosenPaletteIndex + 1) % store.palettes.count
+                chosenPaletteIndex = (chosenPaletteIndex + 1) % store.palettes.count
             }
         } label: {
             Image(systemName: "paintpalette")
@@ -60,14 +62,14 @@ struct PaletteChooser: View {
     @ViewBuilder
     var contextMenu: some View {
         AnimatedActionButton(title: "Edit", systemImage: "pencil") {
-            paletteToEdit = store.palette(at: choosenPaletteIndex)
+            paletteToEdit = store.palette(at: chosenPaletteIndex)
         }
         AnimatedActionButton(title: "New", systemImage: "plus") {
-            store.insertPalette(named: "New", emojis: "", at: choosenPaletteIndex)
-            paletteToEdit = store.palette(at: choosenPaletteIndex)
+            store.insertPalette(named: "New", emojis: "", at: chosenPaletteIndex)
+            paletteToEdit = store.palette(at: chosenPaletteIndex)
         }
         AnimatedActionButton(title: "Delete", systemImage: "minus.circle") {
-            choosenPaletteIndex = store.removePalette(at: choosenPaletteIndex)
+            chosenPaletteIndex = store.removePalette(at: chosenPaletteIndex)
         }
         AnimatedActionButton(title: "Manager", systemImage: "slider.vertical.3") {
             managing = true
@@ -80,7 +82,7 @@ struct PaletteChooser: View {
             ForEach(store.palettes) { palette in
                 AnimatedActionButton(title: palette.name) {
                     if let index = store.palettes.index(matching: palette) {
-                        choosenPaletteIndex = index
+                        chosenPaletteIndex = index
                     }
                 }
             }
