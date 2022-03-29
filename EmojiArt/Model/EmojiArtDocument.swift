@@ -7,13 +7,36 @@
 
 import SwiftUI
 import Combine
+import UniformTypeIdentifiers
 
+extension UTType {
+    static let emojiart = UTType(exportedAs: "com.theyoogle.emojiart")
+}
 
-class EmojiArtDocument: ObservableObject
+class EmojiArtDocument: ReferenceFileDocument
 {
+    static var readableContentTypes = [UTType.emojiart]
+    static var writableContentTypes = [UTType.emojiart]
+    
+    required init(configuration: ReadConfiguration) throws {
+        if let data = configuration.file.regularFileContents {
+            emojiArt = try EmojiArtModel(json: data)
+            fetchBackgroundImageDataIfNecessary()
+        } else {
+            throw CocoaError(.fileReadCorruptFile)
+        }
+    }
+    
+    func snapshot(contentType: UTType) throws -> Data {
+        return try emojiArt.json()
+    }
+    
+    func fileWrapper(snapshot: Data, configuration: WriteConfiguration) throws -> FileWrapper {
+        return FileWrapper(regularFileWithContents: snapshot)
+    }
+    
     @Published private(set) var emojiArt: EmojiArtModel {
         didSet {
-            scheduledAutosave()
             if emojiArt.background != oldValue.background {
                 fetchBackgroundImageDataIfNecessary()
             }
@@ -21,50 +44,7 @@ class EmojiArtDocument: ObservableObject
     }
     
     init() {
-        if let url = Autosave.url, let autosavedEmojiArt = try? EmojiArtModel(url: url) {
-            emojiArt = autosavedEmojiArt
-            fetchBackgroundImageDataIfNecessary()
-        } else {
-            emojiArt = EmojiArtModel()
-        }
-    }
-    
-    private struct Autosave {
-        static let filename = "Autosaved.emojiart"
-        static var url: URL? {
-            let documentDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
-            return documentDirectory?.appendingPathComponent(filename)
-        }
-        static let coalescingInterval = 5.0
-    }
-    
-    private var autosavedTimer: Timer?
-    
-    private func scheduledAutosave() {
-        autosavedTimer?.invalidate()
-        autosavedTimer = Timer.scheduledTimer(withTimeInterval: Autosave.coalescingInterval, repeats: false) { _ in
-            self.autosave()     // not weak self, so document will be in memory
-        }
-    }
-    
-    private func autosave() {
-        if let url = Autosave.url {
-            save(to: url)
-        }
-    }
-    
-    private func save(to url: URL) {
-        let thisFunction = "\(String(describing: self)).\(#function)"
-        do {
-            let data: Data = try emojiArt.json()
-            print("\(thisFunction) json = \(String(data: data, encoding: .utf8) ?? "nil")")
-            try data.write(to: url)
-            print("\(thisFunction) success!")
-        } catch let encodingError where encodingError is EncodingError {
-            print("\(thisFunction) couldn't encode EmojiArt as JSON because \(encodingError.localizedDescription)")
-        } catch {
-            print("\(thisFunction) error = \(error)")
-        }
+        emojiArt = EmojiArtModel()
     }
     
     var emojis: [EmojiArtModel.Emoji] {
@@ -90,72 +70,73 @@ class EmojiArtDocument: ObservableObject
         
         backgroundImage = nil
         switch emojiArt.background {
+            case .url(let url):
+                backgroundImageFetchStatus = .fetching
+                backgroundImageFetchCancellable?.cancel()
+                
+                let session = URLSession.shared
+                let publisher = session.dataTaskPublisher(for: url)
+                    .map { (data, response) in
+                        UIImage(data: data)
+                    }
+                    .replaceError(with: nil)
+                    .receive(on: DispatchQueue.main)
+                
+                backgroundImageFetchCancellable = publisher
+                    .sink { [weak self] image in
+                        self?.backgroundImage = image
+                        self?.backgroundImageFetchStatus = (image != nil) ? .idle : .failed(url)
+                    }
+                
+            case .imageData(let data):
+                backgroundImage = UIImage(data: data)
             
-        case .url(let url):
-            
-            backgroundImageFetchStatus = .fetching
-            backgroundImageFetchCancellable?.cancel()
-            
-            let session = URLSession.shared
-            let publisher = session.dataTaskPublisher(for: url)
-                .map { (data, response) in
-                    UIImage(data: data)
-                }
-                .replaceError(with: nil)
-                .receive(on: DispatchQueue.main)
-            
-            backgroundImageFetchCancellable = publisher
-                .sink { [weak self] image in
-                    self?.backgroundImage = image
-                    self?.backgroundImageFetchStatus = (image != nil) ? .idle : .failed(url)
-                }
-            
-//                DispatchQueue.global(qos: .userInitiated).async {
-//                    let imageData = try? Data(contentsOf: url)
-//
-//                    // For main UI Queue
-//                    DispatchQueue.main.async { [weak self] in
-//                        if self?.emojiArt.background == .url(url) {
-//
-//                            self?.backgroundImageFetchStatus = .idle
-//                            if imageData != nil {
-//                                self?.backgroundImage = UIImage(data: imageData!)
-//                            }
-//                            if self?.backgroundImage == nil {
-//                                self?.backgroundImageFetchStatus = .failed(url)
-//                            }
-//                        }
-//                    }
-//
-//                }
-            
-        case .imageData(let data):
-            backgroundImage = UIImage(data: data)
-        
-        case .blank:
-            break
+            case .blank:
+                break
         }
     }
     
-    func setBackground(_ background: EmojiArtModel.Background) {
-        emojiArt.background = background
-        print("background set to \(background)")
+    // MARK: - Intent(s)
+    
+    func setBackground(_ background: EmojiArtModel.Background, undoManager: UndoManager?) {
+        undoablyPeform(operation: "Set Background", with: undoManager) {
+            emojiArt.background = background
+        }
     }
     
-    func addEmoji(_ emoji: String, at location: (x: Int, y: Int), size: CGFloat) {
-        emojiArt.addEmoji(emoji, at: location, size: Int(size))
+    func addEmoji(_ emoji: String, at location: (x: Int, y: Int), size: CGFloat, undoManager: UndoManager?) {
+        undoablyPeform(operation: "Add \(emoji)", with: undoManager) {
+            emojiArt.addEmoji(emoji, at: location, size: Int(size))
+        }
     }
     
-    func moveEmoji(_ emoji: EmojiArtModel.Emoji, by offset: CGSize) {
+    func moveEmoji(_ emoji: EmojiArtModel.Emoji, by offset: CGSize, undoManager: UndoManager?) {
         if let index = emojiArt.emojis.index(matching: emoji) {
-            emojiArt.emojis[index].x += Int(offset.width)
-            emojiArt.emojis[index].y += Int(offset.height)
+            undoablyPeform(operation: "Move", with: undoManager) {
+                emojiArt.emojis[index].x += Int(offset.width)
+                emojiArt.emojis[index].y += Int(offset.height)
+            }
         }
     }
     
-    func scaleEmoji(_ emoji: EmojiArtModel.Emoji, by scale: CGFloat) {
+    func scaleEmoji(_ emoji: EmojiArtModel.Emoji, by scale: CGFloat, undoManager: UndoManager?) {
         if let index = emojiArt.emojis.index(matching: emoji) {
-            emojiArt.emojis[index].size = Int((CGFloat(emojiArt.emojis[index].size) * scale).rounded(.toNearestOrAwayFromZero))
+            undoablyPeform(operation: "Scale", with: undoManager) {
+                emojiArt.emojis[index].size = Int((CGFloat(emojiArt.emojis[index].size) * scale).rounded(.toNearestOrAwayFromZero))
+            }
         }
+    }
+    
+    // MARK: - Undo
+    
+    private func undoablyPeform(operation: String, with undoManager: UndoManager? = nil, doit: () -> Void) {
+        let oldEmojiArt = emojiArt
+        doit()
+        undoManager?.registerUndo(withTarget: self) { myself in
+            myself.undoablyPeform(operation: operation, with: undoManager) {
+                myself.emojiArt = oldEmojiArt
+            }
+        }
+        undoManager?.setActionName(operation)
     }
 }
