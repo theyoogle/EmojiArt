@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5A00662E27F76DAC002770A0 /* Camera.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A00662D27F76DAC002770A0 /* Camera.swift */; };
+		5A00663027F774B5002770A0 /* PhotoLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A00662F27F774B5002770A0 /* PhotoLibrary.swift */; };
 		5A3847CC27F375DF00CA524F /* UtilityExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A3847CA27F375DF00CA524F /* UtilityExtensions.swift */; };
 		5A3847CD27F375DF00CA524F /* UtilityViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A3847CB27F375DF00CA524F /* UtilityViews.swift */; };
 		5A7C439F27EB46670079B041 /* PaletteChooser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A7C439E27EB46670079B041 /* PaletteChooser.swift */; };
@@ -24,6 +26,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		5A00662D27F76DAC002770A0 /* Camera.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Camera.swift; sourceTree = "<group>"; };
+		5A00662F27F774B5002770A0 /* PhotoLibrary.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PhotoLibrary.swift; sourceTree = "<group>"; };
 		5A3847C927F36C4000CA524F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		5A3847CA27F375DF00CA524F /* UtilityExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UtilityExtensions.swift; sourceTree = "<group>"; };
 		5A3847CB27F375DF00CA524F /* UtilityViews.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UtilityViews.swift; sourceTree = "<group>"; };
@@ -54,6 +58,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		5A00662C27F76D93002770A0 /* UIViews */ = {
+			isa = PBXGroup;
+			children = (
+				5A00662F27F774B5002770A0 /* PhotoLibrary.swift */,
+				5A00662D27F76DAC002770A0 /* Camera.swift */,
+			);
+			path = UIViews;
+			sourceTree = "<group>";
+		};
 		5A8E86FB27E6528700486872 /* Utils */ = {
 			isa = PBXGroup;
 			children = (
@@ -85,6 +98,7 @@
 				5A3847C927F36C4000CA524F /* Info.plist */,
 				5AFE8C9B27EEE69B009B3AF1 /* EmojiArt.entitlements */,
 				5ADD4D3127E63954003D1148 /* Model */,
+				5A00662C27F76D93002770A0 /* UIViews */,
 				5ADD4D3027E63948003D1148 /* Views */,
 				5A8E86FB27E6528700486872 /* Utils */,
 				5AAA8CE327E4295500A7FE57 /* EmojiArtApp.swift */,
@@ -199,12 +213,14 @@
 				5AAA8CE627E4295500A7FE57 /* EmojiArtDocumentView.swift in Sources */,
 				5AF68CA127E8CBFB00D29020 /* Palette.swift in Sources */,
 				5AAA8CE427E4295500A7FE57 /* EmojiArtApp.swift in Sources */,
+				5A00663027F774B5002770A0 /* PhotoLibrary.swift in Sources */,
 				5AAB0DF027EB62EC002F0A42 /* PaletteManager.swift in Sources */,
 				5A7C43A127EB5A980079B041 /* PaletteEditor.swift in Sources */,
 				5A8E86FA27E6518400486872 /* EmojiArtDocument.swift in Sources */,
 				5A3847CC27F375DF00CA524F /* UtilityExtensions.swift in Sources */,
 				5A8E86F627E6505300486872 /* EmojiArtModel.swift in Sources */,
 				5A8E86F827E650C000486872 /* EmojiArtModel.Background.swift in Sources */,
+				5A00662E27F76DAC002770A0 /* Camera.swift in Sources */,
 				5A7C439F27EB46670079B041 /* PaletteChooser.swift in Sources */,
 				5A3847CD27F375DF00CA524F /* UtilityViews.swift in Sources */,
 			);
@@ -340,6 +356,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = EmojiArt/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "The camera can be used to set the background of an EmojiArt document.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -373,6 +390,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = EmojiArt/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "The camera can be used to set the background of an EmojiArt document.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
